@@ -4,17 +4,20 @@ import logging
 # Import scrapy and scrapy.crawler 
 import scrapy
 from scrapy.crawler import CrawlerProcess
-from twisted.internet import reactor, defer
-from scrapy.crawler import CrawlerRunner
+#from twisted.internet import reactor, defer
+#from scrapy.crawler import CrawlerRunner
 
-from twisted.internet import reactor
+#from twisted.internet import reactor
 from urllib.parse import urlencode,unquote_plus
+from pathlib import Path
 import re
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timezone
 from typing import TypedDict, List
 
+
 class DestinationBookingQueryParameters(TypedDict):
+    search_id:str
     destination_id:int
     destination: str
     destination_country: str
@@ -35,18 +38,22 @@ class BookingSpider(scrapy.Spider):
     },
     }
 
+    # Name of your spider
+    name = "booking"
+
+    # Url to start your spider from 
+    start_urls = [
+        
+    ]
 
     ROOT_URL = 'https://www.booking.com/searchresults.fr.html'
-    destination_id_mapping = dict()
     filename = "booking_hotels.csv"
     MAX_ROWS_PER_QUERY_RESULT = 20
 
-    def add_query_start_url(self,destination_query_parameters:DestinationBookingQueryParameters)->str:
-        self.destination_id_mapping.update({destination_query_parameters['destination']: destination_query_parameters['destination_id']})
-        url = self.to_url(destination_query_parameters)
-        print('url : ' , url)
-        self.start_urls.append(url)
-        return url
+    def __init__(self, queries:List[DestinationBookingQueryParameters],logger=None):
+        self.queries = queries
+        import logging
+        self.logger = logger or logging.getLogger(__name__)
 
 
     def to_url(self, destination_query_parameters:DestinationBookingQueryParameters)->str:
@@ -60,41 +67,30 @@ class BookingSpider(scrapy.Spider):
                                                 })
         return booking_destination_query_parameters_str
 
-    def get_matching_destination_id_from_url(self, url) ->str:
-        str = ''
-        if(url is None):
-            return str
-        try:
-            url = unquote_plus(url)
-            str = url[url.index('ss=')+3:url.index('&')]
-            str = str[0:str.rfind(',')]
-            str = self.destination_id_mapping[str]
-        except Exception as e:
-            print('no matching destination_id for : ', str)
-        return str
-    
-    def __init__(self, queries:List[DestinationBookingQueryParameters], filename:str):
-        self.start_urls = []
-        for query in queries:
-            self.add_query_start_url(query)
-        BookingSpider.filename = filename
+    def start_requests(self):
+        for query in self.queries:
+            url = self.to_url(query)
 
-    # Name of your spider
-    name = "booking"
+            self.logger.info(f"Start scraping: {url}")
+
+            yield scrapy.Request(
+                url=url,
+                callback=self.parse,
+                meta={"query": query}
+            )
 
     
-
-    # Url to start your spider from 
-    start_urls = [
-        
-    ]
 
     # Callback function that will be called when starting your spider
     # iterate on each hotels in the searchresult page (containerlist), collect hotel name, hotel url and destination_id into a dict
     # then provide callback to follow at hotel_url to gather more informations that will be added to dict (meta)
     def parse(self, response):
+        print("GOT RESPONSE")
+        query = response.meta["query"]
+
         hotel_container_list = response.xpath("*//div[contains(@data-testid,'property-card') and contains(@role,'listitem')]")
         self.logger.info("Found %d hotel containers on %s", len(hotel_container_list), response.url)
+        print("Found %d hotel containers on %s", len(hotel_container_list), response.url)
         i=0
         for hotel_container in hotel_container_list:
             i=i+1
@@ -108,20 +104,23 @@ class BookingSpider(scrapy.Spider):
                   if(hotel_name is None):
                        continue                
                   hotel_item= {
-                    'destination_id':self.get_matching_destination_id_from_url(response.url)
+                    'search_id': query["search_id"],
+                    'destination_id':query["destination_id"]
                     #,'nb_results':len(hotel_container_list)
                     #,'i':i
                     ,'hotel_name' : hotel_name
                     ,'url':hotel_url
+                    ,"scraped_at": datetime.utcnow().isoformat()
                     }
-                  yield response.follow(hotel_url, callback=self.parse_hotel, meta={'item':hotel_item})
+                  yield response.follow(hotel_url, callback=self.parse_hotel, meta={'item':hotel_item,'query':query})
             except Exception as e:
-                logging.info('Hotel not found, go to next')
+                self.logger.error('Hotel not found, go to next')
                 continue
             
     def parse_hotel(self, response):
         try:
             hotel_item = response.meta['item']
+
             gps_coord_node = response.xpath('*//a[contains(@data-atlas-latlng,"")]/@data-atlas-latlng')
             gps_coord_str = str(gps_coord_node.get())
             gps_lat, gps_lng = None, None
@@ -136,7 +135,7 @@ class BookingSpider(scrapy.Spider):
 
             score = response.xpath('*//div[contains(@data-testid,"review-score-right-component")]/div[1]/text()').get()
             if(score is not None):
-                score = BookingSpider.extract_first_number(score)
+                score = self.extract_first_number(score)
             description = response.xpath('*//div[@class="hp-description"]//following::p[contains(@data-testid,"property-description")]/text()').get()
             hotel_item.update({
                 'gps_lat': gps_lat
@@ -147,46 +146,52 @@ class BookingSpider(scrapy.Spider):
             })
             yield hotel_item
         except Exception as e:
-            logging.error(f"An error occured : {e}")
+            self.logger.error(f"An error occured : {e}")
+            raise
             #self.logger.error('Error parsing response: %s', e)
 
+    @staticmethod
     def extract_first_number(txt:str):
         match = re.search(r"\d+(?:[.,]\d+)?", txt)
         if match:
             return match.group(0).replace(",", ".")
         return None
 
-# Name of the file where the results will be saved
-
-current_dir = os.path.dirname(os.path.realpath(__file__))
-output_subdir = os.path.join(current_dir,"data","output")
-os.makedirs(output_subdir, exist_ok=True)
-print("output_subdir : ", output_subdir)
-
-
-def get_outputfile_path(filename: str) -> str:
-    return os.path.join(output_subdir, filename)
 
 
 
-
-def scrap(booking_queries: List[DestinationBookingQueryParameters], filename: str):
-    filepath = get_outputfile_path(filename)
+def scrap(booking_queries: List[DestinationBookingQueryParameters], output_file_path: Path, logger=None):
+    import os
+    import logging
+    from scrapy.crawler import CrawlerRunner
+    import asyncio
 
     # If file exists, remove it so Scrapy starts fresh
-    if os.path.exists(filepath):
-        print("remove file : ", filepath)
-        os.remove(filepath)
-
-    process = CrawlerProcess(
+    if os.path.exists(output_file_path):
+        print("remove file : ", output_file_path)
+        os.remove(output_file_path)
+    print("START SCRAP")
+    runner = CrawlerRunner(
         settings={
             "USER_AGENT": "Chrome/97.0",
             "LOG_LEVEL": logging.INFO,
-            "FEEDS": {filepath: {"format": "csv"}},
+            "FEEDS": {str(output_file_path): {"format": "csv"}},
+            "CONCURRENT_REQUESTS": 8,
+            "DOWNLOAD_TIMEOUT": 15,
         }
     )
-    process.crawl(BookingSpider, queries=booking_queries, filename=filename)
-    process.start() 
-    return filepath
 
+    deferred = runner.crawl(
+        BookingSpider,
+        queries=booking_queries,
+        logger=logger
+    )
+
+    return deferred
+
+
+def test_scrapping():
+    import requests
+    url =" https://www.booking.com/searchresults.fr.html?ss=Mont+Saint-Michel%2CFrance&lang=fr&dest_type=city&checkin=2026-04-03&checkout=2026-04-10&group_adults=2&group_children=0&rows=20"
+    requests.get(url).status_code
 

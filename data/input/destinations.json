@@ -1,0 +1,36 @@
+[{"destination_key":"Mont Saint Michel","destination_q":"Mont Saint Michel, France, 50170", "address_type":"tourism"}
+                                ,{"destination_key":"Saint-Malo","destination_q":"Saint Malo, France, 35400","address_type":"town"}
+                                ,{"destination_key":"Bayeux","destination_q":"Bayeux, France","address_type":"town"}
+                                ,{"destination_key":"Le Havre","destination_q":"Le Havre, France, 76600","address_type":"city"}
+                                ,{"destination_key":"Rouen","destination_q":"Rouen, France","address_type":"city"}
+                                ,{"destination_key":"Paris","destination_q":"Paris, France","address_type":"city"}
+                                ,{"destination_key":"Amiens","destination_q":"Amiens, France, 80000","address_type":"city"}
+                                ,{"destination_key":"Lille","destination_q":"Lille, France, 59000","address_type":"city"}
+                                ,{"destination_key":"Strasbourg","destination_q":"Strasbourg, France, 67000","address_type":"city"}
+                                ,{"destination_key":"Château du Haut Koenigsbourg","destination_q":"Château du Haut Koenigsbourg, France","address_type":"historic"}
+                                ,{"destination_key":"Colmar","destination_q":"Colmar, France, 68000","address_type":"town"}
+                                ,{"destination_key":"Eguisheim","destination_q":"Eguisheim, France","address_type":"city"}
+                                ,{"destination_key":"Besancon","destination_q":"Besancon, France, 25000","address_type":"city"}
+                                ,{"destination_key":"Dijon","destination_q":"Dijon, France, 21000","address_type":"city"}
+                                ,{"destination_key":"Annecy","destination_q":"Annecy, France, 74000","address_type":"city"}
+                                ,{"destination_key":"Grenoble","destination_q":"Grenoble, France, 38000","address_type":"city"}
+                                ,{"destination_key":"Lyon","destination_q":"Lyon, France, 69000","address_type":"city"}
+                                ,{"destination_key":"Gorges du Verdon","destination_q":"Gorges du Verdon, France","address_type":"tourism"}
+                                ,{"destination_key":"Bormes les Mimosas","destination_q":"Bormes les Mimosas, France; 83230","address_type":"city"}
+                                ,{"destination_key":"Cassis","destination_q":"Cassis, France, 13260","address_type":"city"}
+                                ,{"destination_key":"Marseille","destination_q":"Marseille, France, 13001","address_type":"city"}
+                                ,{"destination_key":"Aix en Provence","destination_q":"Aix en Provence, France","address_type":"city"}
+                                ,{"destination_key":"Avignon","destination_q":"Avignon, France, 84000","address_type":"city"}
+                                ,{"destination_key":"Uzes","destination_q":"Uzes, France, 30700","address_type":"city"}
+                                ,{"destination_key":"Nimes","destination_q":"Nimes, France, 30000","address_type":"city"}
+                                ,{"destination_key":"Aigues Mortes","destination_q":"Aigues-Mortes, France","address_type":"tourism"}
+                                ,{"destination_key":"Saintes Maries de la mer","destination_q":"Saintes Maries de la mer, France","address_type":"city"}
+                                ,{"destination_key":"Collioure","destination_q":"Collioure, France, 66190","address_type":"city"}
+                                ,{"destination_key":"Carcassonne","destination_q":"Carcassonne, France, 11000","address_type":"city"}
+                                ,{"destination_key":"Ariege","destination_q":"Ariege, France","address_type":"city"}
+                                ,{"destination_key":"Toulouse","destination_q":"Toulouse, France, 31000","address_type":"city"}
+                                ,{"destination_key":"Montauban","destination_q":"Montauban, France, 82000","address_type":"city"}
+                                ,{"destination_key":"Biarritz","destination_q":"Biarritz, France, 64200","address_type":"city"}
+                                ,{"destination_key":"Bayonne","destination_q":"Bayonne, France, 64100","address_type":"city"}
+                                ,{"destination_key":"La Rochelle","destination_q":"La Rochelle, France, 17300","address_type":"city"}                               
+                                ]

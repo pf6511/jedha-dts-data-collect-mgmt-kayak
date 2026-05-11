@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kayak"
+version = "0.1.0"
+description = "Kayak"
+authors = [{ name = "Pieric F" }]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["sqlalchemy>=2.0", "boto3>=1.34", "requests>=2.33", "pandas>=2.2.3", "scrapy>=2.14.2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

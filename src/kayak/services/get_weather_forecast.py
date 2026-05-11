@@ -4,7 +4,7 @@ import pandas as pd
 from typing import TypedDict, List
 from pathlib import Path
 
-class DestinationForecastInput(TypedDict):
+class DestinationWeatherForecastInput(TypedDict):
     destination_id: int
     destination: str
     lon: float
@@ -14,12 +14,14 @@ class DestinationForecastInput(TypedDict):
 class GetWeatherForecast:
     URL_ENDPOINT = "https://api.openweathermap.org/data/2.5/forecast"
 
-    def __init__(self, user_agent: str = "Edg/129.0.2792.79"):
+    def __init__(self, user_agent: str = "Edg/129.0.2792.79",logger=None):
         self.user_agent = user_agent
         self.headers = {"User-Agent": self.user_agent}
         self.api_key = os.getenv("OPENWEATHER_API_KEY")
         if not self.api_key:
             raise ValueError("❌ OPENWEATHER_API_KEY not set in environment")
+        import logging
+        self.logger = logger or logging.getLogger(__name__)
 
     def response_json(self, parameters: dict) -> dict:
         try:
@@ -28,13 +30,15 @@ class GetWeatherForecast:
             )
             parameters_print = parameters.copy()
             parameters_print.pop("appid", None)  # hide API key in logs
-            print(
+            self.logger.info(
                 f"Response Status code : {search_resp.status_code}, parameters : {parameters_print}"
             )
+            search_resp.raise_for_status()
             return search_resp.json()
         except Exception as e:
-            print("Request failed:", e)
-            return {}
+            self.logger.error("Request failed:", e)
+            raise
+            ##return {}
 
     def get_location_parameters(self, lon: float, lat: float) -> dict:
         return {"units": "metric", "lon": lon, "lat": lat, "appid": self.api_key}
@@ -59,7 +63,7 @@ class GetWeatherForecast:
 
     def add_destination_forecasts_to_dataframe(
         self,
-        destination_input: DestinationForecastInput,
+        destination_input: DestinationWeatherForecastInput,
         destination_pred_json_output: dict,
         output_dtf: pd.DataFrame,
     ) -> pd.DataFrame:
@@ -90,7 +94,7 @@ class GetWeatherForecast:
         return self.response_json(self.get_location_parameters(lon, lat))
 
     def get_weather_forecasts(
-        self, destination_input_list: List[DestinationForecastInput]
+        self, destination_input_list: List[DestinationWeatherForecastInput]
     ) -> pd.DataFrame:
         """Return DataFrame with forecasts for multiple destinations"""
         output_dtf = self.create_output_dataframe()
@@ -119,5 +123,5 @@ class GetWeatherForecast:
 
         weather_forecasts_dtf.to_csv(output_file, encoding="utf-8", sep=",", index=False)
 
-        print(f"✅ Forecasts saved to {output_file}")
+        print(f"Forecasts saved to {output_file}")
         return weather_forecasts_dtf
